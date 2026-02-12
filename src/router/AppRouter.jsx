@@ -11,7 +11,7 @@ import GainersLosers from "../Component/GainersLosers";
 const AppRouter = createBrowserRouter([
     
     {
-        path: "/register",
+        path: "/",
         element: <LoginSignup/>,
     },
   
