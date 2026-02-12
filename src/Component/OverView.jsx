@@ -70,7 +70,7 @@ export default function OverView() {
         <div className='flex gap-4 justify-center font-bold pb-6'>
           {marketData.map((item, index) => (
             // Added unique key prop for list items to avoid console warnings
-            <div key={index} className='min-w-36 h-36 rounded-2xl bg-gray-800 flex flex-col justify-center items-center p-4 hover:bg-gray-700 transition-colors'>
+            <div key={index} className='w-30 h-36 rounded-2xl bg-gray-800 flex flex-col justify-center items-center p-4 hover:bg-gray-700 transition-colors'>
               <h1 className='text-gray-400 text-sm uppercase'>{item.name}</h1>
               <h2 className='text-white text-xl font-bold'>{item.value}</h2>
               <div className='flex flex-col items-center'>

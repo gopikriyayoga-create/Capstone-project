@@ -8,9 +8,6 @@ import GainersLosers from "../Component/GainersLosers";
 
 
 
-
-
-
 const AppRouter = createBrowserRouter([
     
     {

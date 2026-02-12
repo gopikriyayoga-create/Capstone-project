@@ -1,152 +1,186 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
+import { useNavigate } from "react-router";
 
 export default function AuthContainer() {
-  // Toggle between 'login' and 'signup' pages
+  const navigate = useNavigate();
+
   const [isLoginView, setIsLoginView] = useState(true);
-  
-  // Single state object to manage all form inputs
+
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: ''
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
   });
 
-  // Handle errors (e.g., password mismatch)
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
-  // 1. Unified change handler for all inputs
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value
-    }));
-    // Clear error when user types
-    if (error) setError('');
+  // -------------------------
+  // helpers (localStorage)
+  // -------------------------
+  const getUsers = () => {
+    return JSON.parse(localStorage.getItem("users")) || [];
   };
 
-  // 2. Submission logic with validation
+  const saveUsers = (users) => {
+    localStorage.setItem("users", JSON.stringify(users));
+  };
+
+  // -------------------------
+  // input change
+  // -------------------------
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    if (error) setError("");
+  };
+
+  // -------------------------
+  // submit
+  // -------------------------
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
+    const users = getUsers();
+
+    // ========================
+    // REGISTER
+    // ========================
     if (!isLoginView) {
-      // Signup-specific validation: Password matching
       if (formData.password !== formData.confirmPassword) {
-        setError("Passwords do not match!");
-        return;
+        return setError("Passwords do not match");
       }
-      console.log("Account Created:", { 
-        name: formData.name, 
-        email: formData.email, 
-        password: formData.password 
-      });
-      alert("Success! Account created for " + formData.name);
-    } else {
-      // Login-specific logic
-      console.log("Logging in with:", { 
-        email: formData.email, 
-        password: formData.password 
-      });
-      alert("Success! Logged in as " + formData.email);
+
+      const userExists = users.find(
+        (u) => u.email === formData.email
+      );
+
+      if (userExists) {
+        return setError("User already exists. Please login.");
+      }
+
+      const newUser = {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+      };
+
+      users.push(newUser);
+      saveUsers(users);
+
+      localStorage.setItem("token", formData.email);
+
+      alert("Account created successfully!");
+      navigate("/dashboard/overview");
+    }
+
+    // ========================
+    // LOGIN
+    // ========================
+    else {
+      const user = users.find(
+        (u) =>
+          u.email === formData.email &&
+          u.password === formData.password
+      );
+
+      if (!user) {
+        return setError("Invalid email or password");
+      }
+
+      localStorage.setItem("token", user.email);
+
+      alert("Login successful!");
+      navigate("/dashboard/overview");
     }
   };
 
   return (
-    <section className='flex flex-col lg:flex-row min-h-screen items-center justify-center  p-4'>
-      
-      {/* Form Container */}
-      <div className='w-full max-w-md bg-[#10212b]  text-white p-8 rounded-2xl shadow-2xl lg:rounded-r-none'>
-        
-        {/* Header/Logo */}
-        <div className='flex items-center gap-3 mb-10 justify-center lg:justify-start'>
-          <img src="src/Logo.png" alt="logo" className="w-10 h-10 object-contain"/>
-          <h1 className='text-3xl font-bold tracking-tight'>Crypto</h1>
-        </div>
+    <section className="flex flex-col lg:flex-row min-h-screen items-center justify-center p-4">
 
-        <div className='mb-8'>
-          <h2 className='text-2xl font-semibold'>
-            {isLoginView ? 'Login' : 'Create Account'}
-          </h2>
-          <p className='text-blue-200 mt-2 text-sm'>
-            {isLoginView ? "Don't have an account?" : "Already have an account?"}
-            <button 
-              type="button"
-              onClick={() => { setIsLoginView(!isLoginView); setError(''); }} 
-              className='ml-1 font-bold underline hover:text-white transition'
-            >
-              {isLoginView ? 'Sign up' : 'Sign in'}
-            </button>
-          </p>
-        </div>
+      <div className="w-full max-w-md bg-[#10212b] text-white p-8 rounded-2xl shadow-2xl">
 
-        {/* Display Validation Error */}
+        <h2 className="text-2xl font-bold mb-6 text-center">
+          {isLoginView ? "Login" : "Create Account"}
+        </h2>
+
         {error && (
-          <div className="bg-red-500/20 border border-red-500 text-red-200 p-3 rounded-lg mb-6 text-sm">
+          <div className="bg-red-500/20 text-red-300 p-2 rounded mb-4 text-sm">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className='space-y-5'>
-          {/* Create Account Fields */}
+        <form onSubmit={handleSubmit} className="space-y-4">
+
           {!isLoginView && (
-            <div className='flex flex-col space-y-1'>
-              <label className='text-xs font-bold uppercase text-blue-300'>Full Name</label>
-              <input 
-                type="text" name="name" required
-                value={formData.name} onChange={handleChange}
-                className='bg-blue-800 border border-blue-700 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-400'
-                placeholder="Enter your name"
-              />
-            </div>
+            <input
+              type="text"
+              name="name"
+              placeholder="Full Name"
+              required
+              value={formData.name}
+              onChange={handleChange}
+              className="w-full p-3 rounded bg-blue-800"
+            />
           )}
 
-          {/* Shared Fields */}
-          <div className='flex flex-col space-y-1'>
-            <label className='text-xs font-bold uppercase text-blue-300'>E-mail</label>
-            <input 
-              type="email" name="email" required
-              value={formData.email} onChange={handleChange}
-              className='bg-blue-800 border border-blue-700 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-400'
-              placeholder="name@email.com"
-            />
-          </div>
+          <input
+            type="email"
+            name="email"
+            placeholder="Email"
+            required
+            value={formData.email}
+            onChange={handleChange}
+            className="w-full p-3 rounded bg-blue-800"
+          />
 
-          <div className='flex flex-col space-y-1'>
-            <label className='text-xs font-bold uppercase text-blue-300'>Password</label>
-            <input 
-              type="password" name="password" required
-              value={formData.password} onChange={handleChange}
-              className='bg-blue-800 border border-blue-700 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-400'
-              placeholder="••••••••"
-            />
-          </div>
+          <input
+            type="password"
+            name="password"
+            placeholder="Password"
+            required
+            value={formData.password}
+            onChange={handleChange}
+            className="w-full p-3 rounded bg-blue-800"
+          />
 
-          {/* Create Account Confirmation Field */}
           {!isLoginView && (
-            <div className='flex flex-col space-y-1'>
-              <label className='text-xs font-bold uppercase text-blue-300'>Confirm Password</label>
-              <input 
-                type="password" name="confirmPassword" required
-                value={formData.confirmPassword} onChange={handleChange}
-                className='bg-blue-800 border border-blue-700 rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-400'
-                placeholder="Repeat your password"
-              />
-            </div>
+            <input
+              type="password"
+              name="confirmPassword"
+              placeholder="Confirm Password"
+              required
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              className="w-full p-3 rounded bg-blue-800"
+            />
           )}
 
-          <button 
+          <button
             type="submit"
-            className='w-full bg-white text-blue-900 font-bold py-3 rounded-lg hover:bg-blue-50 active:scale-95 transition-all shadow-md mt-4'
+            className="w-full bg-white text-black font-bold py-3 rounded"
           >
-            {isLoginView ? 'Login' : 'Create account'}
+            {isLoginView ? "Login" : "Register"}
           </button>
         </form>
-      </div>
 
-      {/* Hero Image (Desktop Only) */}
-      <div className='hidden lg:block w-full max-w-md h-120 overflow-hidden rounded-r-2xl shadow-2xl'>
-        <img src="Login.png" alt="Crypto App" className='w-full h-full object-cover' />
+        <p className="text-center mt-5 text-sm">
+          {isLoginView ? "Don't have an account?" : "Already have an account?"}
+          <button
+            onClick={() => {
+              setIsLoginView(!isLoginView);
+              setError("");
+            }}
+            className="ml-2 underline"
+          >
+            {isLoginView ? "Register" : "Login"}
+          </button>
+        </p>
       </div>
     </section>
   );
